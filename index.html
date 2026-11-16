@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="tg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мағозаи бозиҳо</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#eef2f7;--ink:#14213d;--muted:#6b7a90;--accent:#2a6fdb;--card:#fff;--line:#dde4ee;--ok:#1f9d55}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:16px 16px 150px}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h2{font-size:20px;margin:22px 0 12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.balance{background:var(--ink);color:#fff;border-radius:20px;padding:18px 20px}
+.balance small{color:#a9b6cc;font-size:14px}
+.balance strong{display:block;font-size:30px;margin-top:4px}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:14px;padding:13px 16px;font-weight:700;font-size:15px;width:100%}
+.btn.light{background:#fff;color:var(--ink);width:auto}
+.search{width:100%;border:1px solid var(--line);border-radius:14px;padding:13px 14px;font-size:16px;background:#fff;margin-top:14px}
+.chips{display:flex;gap:8px;margin:12px 0;overflow-x:auto}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;font-size:14px;white-space:nowrap;color:var(--ink)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.game{border:0;text-align:left;color:#fff;border-radius:18px;padding:14px;min-height:150px;display:flex;flex-direction:column;justify-content:flex-end}
+.game .icon{font-size:38px;margin-bottom:auto}
+.game b{font-size:16px}.game span{font-size:13px;opacity:.85;margin-top:3px}
+.ff{background:#e8742a}.pubg{background:#4a5a6a}.steam{background:#1b3a5c}.tgp{background:#2a6fdb}.tgs{background:#c9971c}
+.pack{background:var(--card);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.pack .ic{font-size:30px}.pack b{font-size:15px}.pack .pr{color:var(--muted);font-size:14px}
+.pack button{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px;font-weight:700;font-size:14px;margin-top:4px}
+.back{background:none;border:0;color:var(--accent);font-size:16px;padding:4px 0;margin-bottom:6px}
+.card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:10px}
+.muted{color:var(--muted);font-size:14px}
+.amounts{display:flex;gap:8px;margin:10px 0}
+.amounts button{flex:1;border:1px solid var(--line);background:#fff;border-radius:12px;padding:11px 0;font-weight:700}
+.amounts button.on{border-color:var(--accent);color:var(--accent)}
+input.f{width:100%;border:1px solid var(--line);border-radius:12px;padding:13px;font-size:18px;margin:8px 0;background:#fff}
+.tag{font-size:12px;padding:4px 9px;border-radius:999px;background:#fff4d6;color:#8a6200}
+.cartbar{position:fixed;left:16px;right:16px;bottom:calc(70px + env(safe-area-inset-bottom,0px))}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);display:flex;justify-content:space-around;padding:8px 0 calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+nav button{background:none;border:0;color:var(--muted);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:2px 6px}
+nav button span{font-size:22px}nav button.on{color:var(--accent);font-weight:700}
+#toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90%;text-align:center;z-index:9}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="toast" role="status"></div>
+<div id="app"></div>
+<div id="cartbar" class="cartbar"></div>
+<nav id="nav"></nav>
+
+<script>
+/* ===== Telegram ===== */
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+const tgUser = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
+const BOT = "Nematov_Donat_bot"; // номи боти шумо (бе @)
+
+/* ===== Маълумот (нархҳо — намуна, худатон иваз кунед) ===== */
+const GAMES = [
+  {id:"ff-cis", name:"Free Fire СНГ", icon:"🔥", cls:"ff", cat:"games", items:[
+    ["110 алмаз",7.89],["341 алмаз",23.5],["572 алмаз",39.39],["1166 алмаз",78],
+    ["2398 алмаз",155.5],["6160 алмаз",395],["Weekly Lite",3.9],["Ваучер ҳафта",14.9]]},
+  {id:"ff-id", name:"Free Fire Индонезия", icon:"🔥", cls:"ff", cat:"games", items:[
+    ["50 алмаз",5],["70 алмаз",7],["140 алмаз",14],["355 алмаз",28],["720 алмаз",54],["1450 алмаз",110]]},
+  {id:"pubg", name:"PUBG Mobile", icon:"🎯", cls:"pubg", cat:"games", items:[
+    ["60 UC",8.8],["325 UC",44.3],["660 UC",87.87],["1800 UC",220.2],["3850 UC",442.5],["8100 UC",884.3]]},
+  {id:"tg-prem", name:"Telegram Premium", icon:"⭐", cls:"tgp", cat:"telegram", items:[
+    ["3 моҳ",119.9],["6 моҳ",190],["12 моҳ",330]]},
+  {id:"tg-stars", name:"Telegram Stars", icon:"🌟", cls:"tgs", cat:"telegram", items:[
+    ["50 Stars",7.5],["100 Stars",14.5],["500 Stars",70]]},
+  {id:"steam", name:"Steam", icon:"🎮", cls:"steam", cat:"games", items:[
+    ["Steam $5",55],["Steam $10",108],["Steam $20",212]]}
+];
+const CATS = [["all","Ҳама"],["games","Бозиҳо"],["telegram","Telegram"]];
+
+/* ===== Ҳолат (дар худи телефон нигоҳ дошта мешавад — танҳо намоиш) ===== */
+let S = { balance: 0, cart: [], orders: [] };
+try { const raw = localStorage.getItem("shop_state"); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch (e) {}
+function save() { try { localStorage.setItem("shop_state", JSON.stringify(S)); } catch (e) {} }
+
+let view = "shop", cat = "all", query = "", gameId = null, topAmount = 50;
+
+/* ===== Ёвар ===== */
+const $ = s => document.querySelector(s);
+const money = n => n.toFixed(2).replace(".", ",") + " см";
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const cartTotal = () => S.cart.reduce((a, i) => a + i.price * i.qty, 0);
+const cartCount = () => S.cart.reduce((a, i) => a + i.qty, 0);
+const refLink = () => `https://t.me/${BOT}?start=ref_${tgUser ? tgUser.id : "0"}`;
+let toastTimer;
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+function go(v, extra) { view = v; if (extra !== undefined) gameId = extra; render(); window.scrollTo(0, 0); }
+
+/* ===== Амалҳо ===== */
+function addToCart(gid, idx) {
+  const g = GAMES.find(x => x.id === gid), it = g.items[idx];
+  const found = S.cart.find(c => c.gid === gid && c.idx === idx);
+  if (found) found.qty++; else S.cart.push({ gid, idx, game: g.name, name: it[0], price: it[1], qty: 1 });
+  save(); renderCartBar(); toast("Ба сабад илова шуд");
+}
+function changeQty(i, d) {
+  S.cart[i].qty += d;
+  if (S.cart[i].qty <= 0) S.cart.splice(i, 1);
+  save(); render();
+}
+function topUp() {
+  const v = parseFloat($("#amount").value.replace(",", "."));
+  if (!v || v <= 0) return toast("Маблағро дуруст ворид кунед");
+  /* ДИҚҚАТ: ин танҳо намоиш аст. Дар кори аслӣ пардохтро сервер тасдиқ мекунад. */
+  S.balance += v; save(); toast("Баланс " + money(v) + " зиёд шуд (намоиш)"); render();
+}
+function checkout() {
+  const pid = $("#pid").value.trim();
+  if (!pid) return toast("ID-и бозингарро ворид кунед");
+  const total = cartTotal();
+  if (total > S.balance) return toast("Баланс кофӣ нест. Аввал пур кунед.");
+  S.balance -= total;
+  S.orders.unshift({ id: "ORD-" + Math.floor(10000 + Math.random() * 89999), date: new Date().toLocaleString("ru-RU").slice(0, 17),
+    pid, items: S.cart.map(c => `${c.game} — ${c.name} ×${c.qty}`), total, status: "Интизорӣ" });
+  S.cart = []; save(); toast("Фармоиш қабул шуд"); go("orders");
+}
+function copyLink() {
+  const link = refLink();
+  if (navigator.clipboard) navigator.clipboard.writeText(link).then(() => toast("Истинод нусха шуд"), () => toast(link));
+  else toast(link);
+}
+
+/* ===== Намоишҳо ===== */
+function filtered() {
+  return GAMES.filter(g => (cat === "all" || g.cat === cat) && g.name.toLowerCase().includes(query.toLowerCase()));
+}
+function gridHTML(list) {
+  if (!list.length) return `<div class="card muted" style="grid-column:1/-1">Чизе ёфт нашуд.</div>`;
+  return list.map(g => `<button class="game ${g.cls}" onclick="go('game','${g.id}')"><div class="icon">${g.icon}</div>
+    <b>${esc(g.name)}</b><span>аз ${money(Math.min(...g.items.map(i => i[1])))}</span></button>`).join("");
+}
+function renderGrid() { $("#grid").innerHTML = gridHTML(filtered()); }
+
+const V = {
+  shop() {
+    return `
+      <div class="balance"><div class="row"><div><small>Балансатон</small><strong>${money(S.balance)}</strong></div>
+      <button class="btn light" onclick="go('wallet')">Пур кардан</button></div></div>
+      <h2>Бозиҳо ва хидматҳо</h2>
+      <input class="search" placeholder="Бозиро ҷустуҷӯ кунед" value="${esc(query)}" oninput="query=this.value;renderGrid()">
+      <div class="chips">${CATS.map(c => `<button class="chip ${cat === c[0] ? "on" : ""}" onclick="cat='${c[0]}';render()">${c[1]}</button>`).join("")}</div>
+      <div class="grid" id="grid">${gridHTML(filtered())}</div>`;
+  },
+  game() {
+    const g = GAMES.find(x => x.id === gameId);
+    return `<button class="back" onclick="go('shop')">← Ба феҳрист</button>
+      <h2 style="margin-top:4px">${g.icon} ${esc(g.name)}</h2>
+      <div class="grid">${g.items.map((it, i) => `
+        <div class="pack"><div class="ic">${g.icon}</div><b>${esc(it[0])}</b><div class="pr">${money(it[1])}</div>
+        <button onclick="addToCart('${g.id}',${i})">Илова кардан +</button></div>`).join("")}</div>`;
+  },
+  cart() {
+    if (!S.cart.length) return `<button class="back" onclick="go('shop')">← Ба мағоза</button><div class="card muted">Сабад холӣ аст.</div>`;
+    return `<button class="back" onclick="go('shop')">← Ба мағоза</button><h2 style="margin-top:4px">Сабад</h2>
+      ${S.cart.map((c, i) => `<div class="card row"><div><b>${esc(c.name)}</b><div class="muted">${esc(c.game)} · ${money(c.price)}</div></div>
+        <div class="row"><button class="chip" onclick="changeQty(${i},-1)">−</button><b>${c.qty}</b><button class="chip" onclick="changeQty(${i},1)">+</button></div></div>`).join("")}
+      <div class="card"><label class="muted" for="pid">ID-и бозингар (UID)</label>
+        <input class="f" id="pid" inputmode="numeric" placeholder="Масалан: 123456789">
+        <div class="row"><span>Ҷамъ:</span><b>${money(cartTotal())}</b></div>
+        <div class="row muted"><span>Балансатон:</span><span>${money(S.balance)}</span></div></div>
+      <button class="btn" onclick="checkout()">Харидан — ${money(cartTotal())}</button>`;
+  },
+  orders() {
+    return `<h2 style="margin-top:4px">Фармоишҳо</h2>` + (S.orders.length ? S.orders.map(o => `
+      <div class="card"><div class="row"><b>${o.id}</b><span class="tag">${o.status}</span></div>
+      <div class="muted">${o.date} · ID: ${esc(o.pid)}</div>
+      ${o.items.map(t => `<div>${esc(t)}</div>`).join("")}<div style="margin-top:6px"><b>${money(o.total)}</b></div></div>`).join("")
+      : `<div class="card muted">Ҳоло фармоиш нест.</div>`);
+  },
+  bonus() {
+    return `<h2 style="margin-top:4px">Бонус</h2>
+      <div class="card"><b>Дӯстонро даъват кунед</b><p class="muted" style="margin:6px 0 10px">Истиноди худро ба дӯстон фиристед.</p>
+      <div class="card muted" style="word-break:break-all;background:var(--bg)">${esc(refLink())}</div>
+      <button class="btn" onclick="copyLink()">Нусха кардани истинод</button></div>`;
+  },
+  wallet() {
+    return `<h2 style="margin-top:4px">Ҳамён</h2>
+      <div class="balance"><small>Баланс</small><strong>${money(S.balance)}</strong></div>
+      <h2>Маблағи пуркунӣ</h2>
+      <input class="f" id="amount" inputmode="decimal" value="${topAmount}">
+      <div class="amounts">${[20, 50, 100, 200, 500].map(a => `<button class="${topAmount === a ? "on" : ""}" onclick="topAmount=${a};document.getElementById('amount').value=${a};render()">${a}</button>`).join("")}</div>
+      <button class="btn" onclick="topUp()">Пур кардан</button>
+      <p class="muted" style="margin-top:10px">Ҳоло ин намоиш аст: пардохти аслӣ баъдтар бо сервер пайваст мешавад.</p>`;
+  },
+  profile() {
+    const name = tgUser ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") : "Меҳмон";
+    return `<h2 style="margin-top:4px">Профил</h2>
+      <div class="card"><b>${esc(name)}</b><div class="muted">ID: ${tgUser ? tgUser.id : "—"}</div></div>
+      <div class="card row"><span>Фармоишҳо</span><b>${S.orders.length}</b></div>
+      <div class="card row"><span>Баланс</span><b>${money(S.balance)}</b></div>`;
+  }
+};
+function renderCartBar() {
+  const n = cartCount();
+  $("#cartbar").innerHTML = (n && view !== "cart")
+    ? `<button class="btn" onclick="go('cart')">Сабад (${n}) — ${money(cartTotal())}</button>` : "";
+}
+function renderNav() {
+  const items = [["shop","🛍","Мағоза"],["orders","🧾","Фармоишҳо"],["bonus","🎁","Бонус"],["wallet","👛","Ҳамён"],["profile","👤","Профил"]];
+  const active = (view === "game" || view === "cart") ? "shop" : view;
+  $("#nav").innerHTML = items.map(i => `<button class="${active === i[0] ? "on" : ""}" onclick="go('${i[0]}')"><span>${i[1]}</span>${i[2]}</button>`).join("");
+}
+function render() { $("#app").innerHTML = V[view](); renderCartBar(); renderNav(); }
+render();
+</script>
+</body>
+</html>
