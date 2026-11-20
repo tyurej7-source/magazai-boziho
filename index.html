@@ -32,7 +32,8 @@ h1{font-size:26px;margin:18px 0 12px}h2{font-size:20px;margin:22px 0 12px}
 .chip.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .game{position:relative;overflow:hidden;border:0;text-align:left;color:#fff;border-radius:24px;min-height:190px;background:linear-gradient(150deg,var(--g1),var(--g2));display:flex;flex-direction:column;justify-content:flex-end;padding:16px}
-.game .big{position:absolute;top:14px;right:14px;left:14px;text-align:center;font-size:64px;line-height:1;opacity:.95}
+.game .big{position:absolute;top:18px;left:0;right:0;display:flex;justify-content:center}
+.game .art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .game:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(20,3,6,.85))}
 .game>div{position:relative;z-index:1}.game b{font-size:17px;display:block}.game .sub{display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:14px;opacity:.9}
 .pack{background:var(--card);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
@@ -86,7 +87,7 @@ nav button.on{color:var(--accent);font-weight:800}
 const tg = window.Telegram && window.Telegram.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 const tgUser = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
-const BOT = "tajikdonatbot";
+const BOT = "Tajdonat1_bot";
 const PAY_NUMBER = "062455959";
 const PAY_LINK = "http://pay.expresspay.tj/?A=9762000287017734&s=&c=&f1=133&FIELD2=&FIELD3=";
 const UPLOAD_URL = ""; // суроғаи сервер барои қабули чек (баъд аз сохтани сервер пур мекунем)
@@ -116,19 +117,29 @@ const P = {
 };
 const ic = (n, s = 22) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
 
+/* ===== Расмҳои кортҳо (SVG-и худамон). Расмҳо дар ҳамон папка: ff.jpg, pubg.jpg, steam.jpg, tg-stars.jpg. Агар файл набошад, нишонаи кашидашуда мемонад ===== */
+const ART = {
+  gem: '<defs><linearGradient id="ga" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a6f2ff"/><stop offset="1" stop-color="#2a8cff"/></linearGradient></defs><polygon points="32,6 54,24 32,58 10,24" fill="url(#ga)"/><polygon points="32,6 44,24 32,58 20,24" fill="#fff" opacity=".28"/><polygon points="10,24 54,24 32,6" fill="#fff" opacity=".2"/><path d="M10 24h44" stroke="#fff" stroke-width="1.5" opacity=".6"/>',
+  coin: '<defs><linearGradient id="gb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#e0a020"/></linearGradient></defs><circle cx="32" cy="32" r="26" fill="url(#gb)" stroke="#fff3b0" stroke-width="3"/><circle cx="32" cy="32" r="19" fill="none" stroke="#b8800f" stroke-width="2" opacity=".6"/><text x="32" y="39" text-anchor="middle" font-size="20" font-weight="800" fill="#7a4b00" font-family="system-ui,sans-serif">UC</text>',
+  tgstar: '<defs><linearGradient id="gc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ab4ff"/><stop offset="1" stop-color="#7b4dff"/></linearGradient></defs><polygon points="32,5 40,24 59,25 44,38 49,57 32,46 15,57 20,38 5,25 24,24" fill="url(#gc)" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><circle cx="50" cy="12" r="3" fill="#fff"/>',
+  stars: '<defs><linearGradient id="gd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#f2a30f"/></linearGradient></defs><polygon points="32,8 39,25 57,26 43,38 48,55 32,45 16,55 21,38 7,26 25,25" fill="url(#gd)" stroke="#fff3b0" stroke-width="1.5" stroke-linejoin="round"/><path d="M32 1v5M12 10l3 4M52 10l-3 4M3 30h5M56 30h5" stroke="#ffe27a" stroke-width="2" stroke-linecap="round"/>',
+  pad: '<rect x="6" y="20" width="52" height="28" rx="14" fill="#6a6a78"/><rect x="6" y="20" width="52" height="14" rx="7" fill="#fff" opacity=".12"/><path d="M19 28v12M13 34h12" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="43" cy="30" r="3" fill="#ff5a5a"/><circle cx="50" cy="36" r="3" fill="#5ac8ff"/><circle cx="43" cy="42" r="3" fill="#7be07b"/>'
+};
+const artSvg = (k, sz) => `<svg width="${sz}" height="${sz}" viewBox="0 0 64 64" aria-hidden="true" style="stroke:none;stroke-width:0">${ART[k]}</svg>`;
+
 /* ===== Маълумот (нархҳо — намуна, худатон иваз кунед) ===== */
 const GAMES = [
-  {id:"ff-cis", idKey:"ff", name:"Free Fire СНГ", icon:"🔥", g1:"#e3283f", g2:"#6d0a1b", cat:"games", items:[
-    ["110 алмаз",9.89],["341 алмаз",29.5],["572 алмаз",49.39],["1166 алмаз",98],["2398 алмаз",210.5],["6160 алмаз",395],["Weekly Lite",3.9],["Ваучер ҳафта",15.9]]},
-  {id:"ff-id", idKey:"ff", name:"Free Fire Индонезия", icon:"🔥", g1:"#f0603a", g2:"#8f0b21", cat:"games", items:[
+  {id:"ff-cis", art:"gem", img:"ff.jpg", idKey:"ff", name:"Free Fire СНГ", icon:"🔥", g1:"#e3283f", g2:"#6d0a1b", cat:"games", items:[
+    ["110 алмаз",7.89],["341 алмаз",23.5],["572 алмаз",39.39],["1166 алмаз",78],["2398 алмаз",155.5],["6160 алмаз",395],["Weekly Lite",3.9],["Ваучер ҳафта",14.9]]},
+  {id:"ff-id", art:"gem", img:"ff.jpg", idKey:"ff", name:"Free Fire Индонезия", icon:"🔥", g1:"#f0603a", g2:"#8f0b21", cat:"games", items:[
     ["50 алмаз",5],["70 алмаз",7],["140 алмаз",14],["355 алмаз",28],["720 алмаз",54],["1450 алмаз",110]]},
-  {id:"pubg", idKey:"pubg", name:"PUBG Mobile", icon:"🎯", g1:"#5a3a3f", g2:"#1d0b0e", cat:"games", items:[
+  {id:"pubg", art:"coin", img:"pubg.jpg", idKey:"pubg", name:"PUBG Mobile", icon:"🎯", g1:"#5a3a3f", g2:"#1d0b0e", cat:"games", items:[
     ["60 UC",8.8],["325 UC",44.3],["660 UC",87.87],["1800 UC",220.2],["3850 UC",442.5],["8100 UC",884.3]]},
-  {id:"tg-prem", idKey:"tg", name:"Telegram Premium", icon:"⭐", g1:"#b3202a", g2:"#3b0a12", cat:"telegram", items:[
+  {id:"tg-prem", art:"tgstar", img:"", idKey:"tg", name:"Telegram Premium", icon:"⭐", g1:"#b3202a", g2:"#3b0a12", cat:"telegram", items:[
     ["3 моҳ",119.9],["6 моҳ",190],["12 моҳ",330]]},
-  {id:"tg-stars", idKey:"tg", name:"Telegram Stars", icon:"🌟", g1:"#d97a1c", g2:"#6d0a1b", cat:"telegram", items:[
+  {id:"tg-stars", art:"stars", img:"tg-stars.jpg", idKey:"tg", name:"Telegram Stars", icon:"🌟", g1:"#d97a1c", g2:"#6d0a1b", cat:"telegram", items:[
     ["50 Stars",7.5],["100 Stars",14.5],["500 Stars",70]]},
-  {id:"steam", idKey:"steam", name:"Steam", icon:"🎮", g1:"#7a1228", g2:"#1d0509", cat:"games", items:[
+  {id:"steam", art:"pad", img:"steam.jpg", idKey:"steam", name:"Steam", icon:"🎮", g1:"#7a1228", g2:"#1d0509", cat:"games", items:[
     ["Steam $5",55],["Steam $10",108],["Steam $20",212]]}
 ];
 const IDINFO = { ff: "Free Fire ID", pubg: "PUBG ID", tg: "Telegram @username", steam: "Steam логин" };
@@ -222,7 +233,7 @@ async function payDone() {
 function filtered() { return GAMES.filter(g => (cat === "all" || g.cat === cat) && g.name.toLowerCase().includes(query.toLowerCase())); }
 function gridHTML(list) {
   if (!list.length) return `<div class="card muted" style="grid-column:1/-1">Чизе ёфт нашуд.</div>`;
-  return list.map(g => `<button class="game" style="--g1:${g.g1};--g2:${g.g2}" onclick="go('game','${g.id}')"><div class="big">${g.icon}</div>
+  return list.map(g => `<button class="game" style="--g1:${g.g1};--g2:${g.g2}" onclick="go('game','${g.id}')"><div class="big">${artSvg(g.art, 84)}</div><img class="art" src="${g.img || g.id + '.jpg'}" alt="" onerror="this.remove()">
     <div><b>${esc(g.name)}</b><div class="sub"><span>аз ${money(Math.min(...g.items.map(i => i[1])))}</span>${ic("right", 18)}</div></div></button>`).join("");
 }
 function renderGrid() { $("#grid").innerHTML = gridHTML(filtered()); }
@@ -243,8 +254,8 @@ const V = {
   },
   game() {
     const g = GAMES.find(x => x.id === gameId);
-    return `${backBtn("shop")}<h1>${g.icon} ${esc(g.name)}</h1>
-      <div class="grid">${g.items.map((it, i) => `<div class="pack"><div class="ic">${g.icon}</div><b>${esc(it[0])}</b><div class="pr">${money(it[1])}</div>
+    return `${backBtn("shop")}<h1 style="display:flex;align-items:center;gap:10px">${artSvg(g.art, 36)} ${esc(g.name)}</h1>
+      <div class="grid">${g.items.map((it, i) => `<div class="pack"><div class="ic">${artSvg(g.art, 32)}</div><b>${esc(it[0])}</b><div class="pr">${money(it[1])}</div>
         <button class="btn sm" onclick="addToCart('${g.id}',${i})">Илова кардан +</button></div>`).join("")}</div>`;
   },
   cart() {
